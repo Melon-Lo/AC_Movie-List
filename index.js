@@ -5,6 +5,8 @@ const MOVIES_PER_PAGE = 12
 
 const movies = [] // 使用const代表希望movies的內容維持不變，其他人閱讀到 const movies時，也會意識到 movies 裡面放的是不會被隨便更動的資料。
 let filteredMovies = []
+let currentPage = 1
+let input = false
 
 const dataPanel = document.querySelector('#data-panel')
 
@@ -15,7 +17,6 @@ const paginator = document.querySelector('#paginator')
 function renderMovieList(data) { // 不使用movies的原因：增加函式的可用性，不只跟movies綁在一起
   let rawHTML = ''
 
-  // processing
   data.forEach((item) => {
     rawHTML += `<div class="col-sm-3">
         <div class="mb-2">
@@ -52,7 +53,7 @@ function renderPaginator(amount) {
   paginator.innerHTML = rawHTML
 }
 
-// 每頁顯示12部電影
+// show 12 movies every page
 function getMoviesByPage(page) {
   // 下面的函式翻譯：如果filteredMovies是有長度的，那麼顯示filteredMovies；若否，則顯示movies
   const data = filteredMovies.length ? filteredMovies : movies
@@ -91,7 +92,7 @@ function addToFavorite(id) {
     return movie.id === id
   }
   const movie = movies.find(isMovieIdMatched) // find跟filter很像，參數一樣是給一個函式
-  
+
   // 可以改寫成以下的箭頭函式
   //  const movie = movies.find((movie) => movie.id === id)
 
@@ -117,35 +118,30 @@ dataPanel.addEventListener('click', function onPanelClicked(event) {
   }
 })
 
-paginator.addEventListener('click', function onPaginatorClicked (event) {
-  
+paginator.addEventListener('click', function onPaginatorClicked(event) {
+
   // 如果我點擊的不是 <a></a> 的話，這個function就結束
   if (event.target.tagName !== 'A') return
-  
-  const page = Number(event.target.dataset.page)
-  renderMovieList(getMoviesByPage(page))
+
+  currentPage = Number(event.target.dataset.page)
+  renderMovieList(getMoviesByPage(currentPage))
 })
 
-searchForm.addEventListener('submit', function onSearchFormSubmitted(event) {
-  event.preventDefault() // 請瀏覽器不要做預設的動作
+searchForm.addEventListener('input', function onSearchFormInputted(event) {
+  event.preventDefault()
   const keyword = searchInput.value.trim().toLowerCase() // 去頭去尾&全部變成小寫
 
-  for (const movie of movies) {
-    if (movie.title.toLowerCase().includes(keyword)) {
-      filteredMovies.push(movie)
-    }
-  }
+  filteredMovies = movies.filter(movie => movie.title.toLowerCase().includes(keyword))
 
-  // 以下是filter的寫法，沒有在filter條件裡面的陣列物件都會被排除
-  // filteredMovies = movies.filter(movie => movie.title.toLowerCase().includes(keyword))
-
-  if (filteredMovies.length === 0) {
-    return alert('Cannot find movies with keyword: ' + keyword)
-  }
-
+  input = true
+  currentPage = 1
 
   renderPaginator(filteredMovies.length)
-  renderMovieList(getMoviesByPage(1))
+  renderMovieList(getMoviesByPage(currentPage))
+
+  if (filteredMovies.length === 0) {
+    dataPanel.innerHTML = ''
+  }
 })
 
 axios
@@ -153,8 +149,6 @@ axios
   .then((response) => {
     movies.push(...response.data.results)
     renderPaginator(movies.length)
-
-    // 預設狀況下，一開始顯示第一頁
-    renderMovieList(getMoviesByPage(1))
+    renderMovieList(getMoviesByPage(currentPage))
   })
   .catch((err) => console.log(err))
