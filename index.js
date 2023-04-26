@@ -9,10 +9,10 @@ let currentPage = 1
 let input = false
 
 const dataPanel = document.querySelector('#data-panel')
-
 const searchForm = document.querySelector('#search-form')
 const searchInput = document.querySelector('#search-input')
 const paginator = document.querySelector('#paginator')
+const modeSwitch = document.querySelector('#mode-switch')
 
 function renderMovieList(data) { // 不使用movies的原因：增加函式的可用性，不只跟movies綁在一起
   let rawHTML = ''
